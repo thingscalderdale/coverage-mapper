@@ -12,14 +12,15 @@ crc8 = crcmod.predefined.mkPredefinedCrcFun('crc-8')
 
 
 def feature(data_point):
-    data_point_id = (data_point['gateway_time'] +
-                     data_point['gateway_eui']).encode(API_ENCODING)
+    data_point_id = (data_point['time'] +
+                     data_point['gtw_id']).encode(API_ENCODING)
     data_point_hash = hashlib.sha1(data_point_id).hexdigest()
 
     point = geojson.Point((data_point['lat_lon'][1], data_point['lat_lon'][0]))
-    props = dict(hash=data_point_hash, gateway_eui=data_point['gateway_eui'],
-                 time=data_point['gateway_time'], rssi=data_point['rssi'],
-                 snr=data_point['lsnr'], datarate=data_point['datarate'])
+    props = dict(hash=data_point_hash, gtw_id=data_point['gtw_id'],
+                 time=data_point['time'], rssi=data_point['rssi'],
+#                 snr=data_point['snr'], data_rate=data_point['data_rate'])
+                 snr=data_point['snr'])
 
     # Add styling features
     # https://help.github.com/articles/mapping-geojson-files-on-github/
@@ -30,9 +31,9 @@ def feature(data_point):
 
 
 def get_marker_symbol(data_point):
-    eui = data_point['gateway_eui']
+    gtw_id = data_point['gtw_id']
 
-    symbol = chr((crc8(eui) % 26) + 97)  # hopefully unique key for geui
+    symbol = chr((crc8(gtw_id) % 26) + 97)  # hopefully unique key for geui
     return symbol
 
 

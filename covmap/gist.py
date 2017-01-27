@@ -18,15 +18,17 @@ import ghgeojson
 
 logger = logging.getLogger(__name__)
 
+logger.setLevel(logging.DEBUG)
+
 QOS = 1
 
 
 def on_connect(client, userdata, flags, rc):
     logger.info("Connected: %d", rc)
 
-    client.subscribe('%s/devices/%s/up' % (userdata['app_eui'],
-                                           userdata['node_eui']), QOS)
-
+#    client.subscribe('%s/devices/%s/up' % (userdata['app_eui'],
+#                                           userdata['node_eui']), QOS)
+    client.subscribe('+/devices/+/up', 0)
 
 def on_message(client, userdata, msg):
     logger.debug("msg arrives: %r", msg)
@@ -52,19 +54,19 @@ def camel2underscore(name):
 def gist_push(dp, map_, gist, gistid, app_eui):
     dp_ = {}
     for k, v in dp.iteritems():
-        if k == 'datarate':  # fix naming discrepancy
-            dp_['dataRate'] = v
+#        if k == 'data_rate':  # fix naming discrepancy
+#            dp_['dataRate'] = v
         dp_[camel2underscore(k)] = v
 
     logger.debug("dp: %r", dp)
 
-    d = arf8084.decode(base64.b64decode(dp_['payload']))
+    d = arf8084.decode(base64.b64decode(dp_['payload_raw']))
     logger.debug("decoded %s", d)
     if 'lat_lon' not in d:
-        logger.info("gps data doesn't exist in %r", dp_['payload'])
+        logger.info("gps data doesn't exist in %r", dp_['payload_raw'])
         return
 
-    for md in dp_['metadata']:
+    for md in dp_['metadata']['gateways']:
         md.update(d)
         f = ghgeojson.feature(md)
         feature_hashes = set([x['properties']['hash']
